@@ -24,7 +24,7 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final PdfParser pdfParser;
     private final com.safaricom.hr.document.TextChunker textChunker;
-    // Later we will inject VectorStore
+    private final com.safaricom.hr.qdrant.DocumentVectorStore vectorStore;
 
     @Transactional
     public DocumentResponse uploadDocument(MultipartFile file) {
@@ -48,11 +48,11 @@ public class DocumentService {
             log.info("Parsing document: {}", entity.getOriginalFilename());
             List<Document> parsedPages = pdfParser.parse(file, entity.getId().toString(), entity.getOriginalFilename());
             
-            // 3. Chunking & (Placeholder for Embedding)
+            // 3. Chunking & Embedding
             log.info("Chunking document: {}", entity.getOriginalFilename());
             List<Document> chunks = textChunker.chunk(parsedPages);
             log.info("Created {} chunks", chunks.size());
-            // vectorStore.store(chunks);
+            vectorStore.store(chunks);
 
             // 4. Update status to COMPLETED
             entity.setStatus("COMPLETED");
@@ -79,9 +79,10 @@ public class DocumentService {
         DocumentEntity entity = documentRepository.findById(id)
                 .orElseThrow(() -> new DocumentProcessingException("Document not found"));
         
-        // (Placeholder to delete from VectorStore)
-        // vectorStore.deleteByDocumentId(id);
+        // Delete vectors from Qdrant
+        vectorStore.deleteByDocumentId(id);
 
+        // Delete metadata from DB
         documentRepository.delete(entity);
     }
 
