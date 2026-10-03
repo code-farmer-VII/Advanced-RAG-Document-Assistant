@@ -23,7 +23,8 @@ public class DocumentService {
 
     private final DocumentRepository documentRepository;
     private final PdfParser pdfParser;
-    // Later we will inject TextChunker and VectorStore
+    private final com.safaricom.hr.document.TextChunker textChunker;
+    // Later we will inject VectorStore
 
     @Transactional
     public DocumentResponse uploadDocument(MultipartFile file) {
@@ -47,8 +48,10 @@ public class DocumentService {
             log.info("Parsing document: {}", entity.getOriginalFilename());
             List<Document> parsedPages = pdfParser.parse(file, entity.getId().toString(), entity.getOriginalFilename());
             
-            // 3. (Placeholder for Chunking & Embedding)
-            // List<Document> chunks = textChunker.chunk(parsedPages);
+            // 3. Chunking & (Placeholder for Embedding)
+            log.info("Chunking document: {}", entity.getOriginalFilename());
+            List<Document> chunks = textChunker.chunk(parsedPages);
+            log.info("Created {} chunks", chunks.size());
             // vectorStore.store(chunks);
 
             // 4. Update status to COMPLETED
