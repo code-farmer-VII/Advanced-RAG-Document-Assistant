@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: ai-document-assistant
+  
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/documind_db}
+    username: ${DATABASE_USERNAME:documind}
+    password: ${DATABASE_PASSWORD:documindpassword}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  ai:
+    openai:
+      api-key: ${LLM_API_KEY}
+      chat:
+        options:
+          model: ${LLM_MODEL:gpt-4o}
+          temperature: 0.0
+      embedding:
+        options:
+          model: ${EMBEDDING_MODEL:text-embedding-3-small}
+
+    vectorstore:
+      qdrant:
+        host: ${QDRANT_HOST:localhost}
+        port: ${QDRANT_PORT:6334}
+        collection-name: ${QDRANT_COLLECTION:document_chunks}
+        # api-key: ${QDRANT_API_KEY:} # Uncomment if using Qdrant Cloud
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.safaricom.hr: DEBUG
+    org.springframework.ai: INFO
