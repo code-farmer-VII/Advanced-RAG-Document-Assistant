@@ -19,19 +19,29 @@ const Trash2Icon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="n
 const CheckCircleIcon = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>;
 const ClockIcon = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>;
 
+import { useSession } from "next-auth/react";
+
 export default function Sidebar() {
+  const { data: session } = useSession();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetchDocuments();
-  }, []);
+    if (session?.idToken) {
+      fetchDocuments();
+    }
+  }, [session?.idToken]);
 
   const fetchDocuments = async () => {
+    if (!session?.idToken) return;
     try {
-      const res = await fetch('http://localhost:8080/api/v1/documents');
+      const res = await fetch('http://localhost:8080/api/v1/documents', {
+        headers: {
+          'Authorization': `Bearer ${session.idToken}`
+        }
+      });
       if (res.ok) {
         const data = await res.json();
         setDocuments(data);
@@ -69,6 +79,7 @@ export default function Sidebar() {
   };
 
   const uploadFile = async (file: File) => {
+    if (!session?.idToken) return;
     setIsUploading(true);
     const formData = new FormData();
     formData.append('file', file);
@@ -76,6 +87,9 @@ export default function Sidebar() {
     try {
       const res = await fetch('http://localhost:8080/api/v1/documents', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.idToken}`
+        },
         body: formData
       });
       
